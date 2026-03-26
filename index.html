@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Crop Disease System</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(to right, #2c5f2d, #97bc62);
+  text-align: center;
+  padding: 20px;
+  color: white;
+}
+
+.container {
+  background: #f5fff0;
+  color: black;
+  padding: 20px;
+  border-radius: 15px;
+  width: 340px;
+  margin: auto;
+  box-shadow: 0px 0px 15px black;
+}
+
+input, select {
+  width: 90%;
+  padding: 8px;
+  margin: 5px;
+}
+
+button {
+  padding: 10px;
+  background: #2c5f2d;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.color-box {
+  width: 100%;
+  height: 30px;
+  margin-top: 10px;
+  border-radius: 5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🌾 Smart Crop Disease Predictor</h1>
+
+<div class="container">
+
+Moisture (%):<br>
+<input type="number" id="moisture"><br>
+
+Pest Alert:<br>
+<select id="pest">
+  <option value="0">No</option>
+  <option value="1">Yes</option>
+</select><br>
+
+Leaf Spot Level (1-6):<br>
+<input type="number" id="leaf"><br>
+
+<h3>Select Leaf Colour</h3>
+
+<select id="colorSelect" onchange="showColor()">
+  <option value="1">🟡 Baby Yellow (Healthy)</option>
+  <option value="2">🟨 Light Yellow</option>
+  <option value="3">🟠 Yellow</option>
+  <option value="4">🟧 Orange</option>
+  <option value="5">🟫 Brown (Severe)</option>
+</select>
+
+<div id="colorBox" class="color-box"></div>
+
+<br>
+<button onclick="predict()">Predict Disease</button>
+
+<h2 id="result"></h2>
+
+</div>
+
+<script>
+
+function showColor() {
+  let val = document.getElementById("colorSelect").value;
+  let color;
+
+  if (val == 1) color = "#ffffcc";
+  else if (val == 2) color = "#ffeb99";
+  else if (val == 3) color = "#ffd11a";
+  else if (val == 4) color = "#ff9900";
+  else color = "#8b4513";
+
+  document.getElementById("colorBox").style.background = color;
+}
+
+function predict() {
+  let m = document.getElementById("moisture").value;
+  let p = document.getElementById("pest").value;
+  let l = document.getElementById("leaf").value;
+  let c = document.getElementById("colorSelect").value;
+
+  let score = (m/20) + (l*2) + (c*5) + (p*10);
+
+  if (score > 30) {
+    document.getElementById("result").innerHTML = "⚠ High Disease Risk";
+  } 
+  else if (score > 15) {
+    document.getElementById("result").innerHTML = "⚡ Moderate Risk";
+  } 
+  else {
+    document.getElementById("result").innerHTML = "✅ Low Disease Risk";
+  }
+}
+
+showColor();
+
+</script>
+
+</body>
+</html>
