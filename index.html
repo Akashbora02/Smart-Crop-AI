@@ -227,7 +227,7 @@ function predict(){
     color:document.getElementById("color").value
   };
 
-  fetch("http://127.0.0.1:5000/predict",{
+  fetch("https://endothelial-jacalyn-unmeted.ngrok-free.dev/predict",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify(data)
