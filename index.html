@@ -14,29 +14,25 @@ body {
 h2 {
   text-align: center;
   padding: 15px;
-  font-size: 28px;
 }
 
 .container {
   max-width: 420px;
   margin: auto;
-  background: #ffffff;
-  color: #333;
+  background: white;
+  color: black;
   padding: 20px;
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.3);
 }
 
-/* Card style */
 .card {
   background: #f4fbf2;
   padding: 12px;
   border-radius: 12px;
   margin-bottom: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Inputs */
 input, select {
   width: 95%;
   padding: 10px;
@@ -45,68 +41,44 @@ input, select {
   border: 1px solid #ccc;
 }
 
-/* Buttons */
 button {
   width: 100%;
   padding: 12px;
-  margin-top: 10px;
-  border: none;
   border-radius: 12px;
-  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.3s;
+  border: none;
+  margin-top: 10px;
 }
 
-/* Analyze button */
 .btn-analyze {
   background: linear-gradient(45deg, #2e7d32, #66bb6a);
   color: white;
 }
 
-.btn-analyze:hover {
-  transform: scale(1.05);
-  background: linear-gradient(45deg, #1b5e20, #4caf50);
-}
-
-/* Location button */
 .btn-location {
   background: linear-gradient(45deg, #1565c0, #42a5f5);
   color: white;
 }
 
-.btn-location:hover {
-  transform: scale(1.05);
-}
-
-/* Result box */
 .result-box {
   margin-top: 15px;
   padding: 12px;
   border-radius: 12px;
-  font-size: 16px;
   text-align: center;
   font-weight: bold;
 }
 
-/* Color preview */
 .color-box {
   height: 25px;
   margin-top: 5px;
   border-radius: 5px;
 }
 
-/* Map */
 #map {
   height: 220px;
   margin-top: 10px;
   border-radius: 10px;
-  overflow: hidden;
-}
-
-.link-box {
-  text-align: center;
-  margin-top: 10px;
 }
 </style>
 
@@ -165,11 +137,10 @@ button {
 
 <div id="result" class="result-box"></div>
 
-<button class="btn-location" onclick="getLocation()">📍 Find Nearby krushiSeva Kendra</button>
+<button class="btn-location" onclick="getLocation()">📍 Find Nearby KrushiSeva Kendra</button>
 
 <div id="map"></div>
-
-<div id="kendraList" class="link-box"></div>
+<div id="kendraList"></div>
 
 </div>
 
@@ -198,15 +169,17 @@ function showColor(){
   document.getElementById("colorBox").style.background=colors[val-1];
 }
 
-// Prediction
+// Prediction (NO BACKEND)
 function predict(){
 
-  let moisture = document.getElementById("moisture").value;
-  let leaf = document.getElementById("leaf").value;
+  let moisture = parseFloat(document.getElementById("moisture").value);
+  let leaf = parseFloat(document.getElementById("leaf").value);
+  let color = parseInt(document.getElementById("color").value);
+  let pest = parseInt(document.getElementById("pest").value);
 
-  // 🚫 Frontend validation
-  if(moisture === "" || leaf === ""){
-    document.getElementById("result").innerHTML = "⚠ Please fill all fields";
+  // Validation
+  if(isNaN(moisture) || isNaN(leaf)){
+    document.getElementById("result").innerHTML = "⚠ Fill all fields";
     return;
   }
 
@@ -220,42 +193,56 @@ function predict(){
     return;
   }
 
-  let data={
-    moisture:moisture,
-    pest:document.getElementById("pest").value,
-    leaf:leaf,
-    color:document.getElementById("color").value
-  };
+  // Disease logic
+  let disease="", advice="";
 
-  fetch("https://endothelial-jacalyn-unmeted.ngrok-free.dev/predict",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(data)
-  })
-  .then(res=>res.json())
-  .then(res=>{
+  if(color >= 5 && leaf >= 4){
+    disease="Leaf Blight";
+    advice="Apply fungicide spray.";
+  }
+  else if(color == 4 && pest == 1){
+    disease="Bacterial Spot";
+    advice="Reduce irrigation.";
+  }
+  else if(color == 3 && leaf >= 3){
+    disease="Yellow Rust";
+    advice="Use resistant seeds.";
+  }
+  else if(moisture > 80){
+    disease="Root Rot";
+    advice="Improve drainage.";
+  }
+  else if(pest == 1){
+    disease="Pest Attack";
+    advice="Use pesticide.";
+  }
+  else{
+    disease="Healthy";
+    advice="Crop is healthy.";
+  }
 
-    // 🚫 Backend error
-    if(res.error){
-      document.getElementById("result").style.background="#ff5252";
-      document.getElementById("result").innerHTML = "❌ " + res.error;
-      return;
-    }
+  let score = (moisture/20)+(leaf*2)+(color*3)+(pest*8);
 
-    let color="lightgreen";
-    if(res.risk.includes("High")) color="#ff5252";
-    else if(res.risk.includes("Moderate")) color="#ffca28";
+  let risk="", bg="#81c784";
 
-    document.getElementById("result").style.background=color;
+  if(score > 25){
+    risk="⚠ High Risk";
+    bg="#ff5252";
+  }
+  else if(score > 12){
+    risk="⚡ Moderate Risk";
+    bg="#ffca28";
+  }
+  else{
+    risk="✅ Low Risk";
+  }
 
-    document.getElementById("result").innerHTML =
-      `${res.risk}<br>🌿 ${res.disease}<br>💡 ${res.advice}`;
-  })
-  .catch(()=>{
-    document.getElementById("result").innerHTML="⚠ Backend not running";
-  });
+  document.getElementById("result").style.background=bg;
+  document.getElementById("result").innerHTML =
+    `${risk}<br>🌿 ${disease}<br>💡 ${advice}`;
 }
-// Map
+
+// Map (works without backend)
 function getLocation(){
   navigator.geolocation.getCurrentPosition(pos=>{
     let lat=pos.coords.latitude;
