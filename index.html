@@ -1,47 +1,112 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Smart Crop Disease System</title>
+<title>🌾 Smart Crop AI Assistant</title>
 
 <style>
 body {
-  font-family: Arial;
-  background: linear-gradient(to right, #2c5f2d, #97bc62);
-  text-align: center;
-  padding: 20px;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #2c7744, #a8e063);
+  margin: 0;
   color: white;
+}
+
+h2 {
+  text-align: center;
+  padding: 15px;
+  font-size: 28px;
 }
 
 .container {
-  background: #f5fff0;
-  color: black;
-  padding: 20px;
-  border-radius: 15px;
-  width: 340px;
+  max-width: 420px;
   margin: auto;
-  box-shadow: 0px 0px 15px black;
+  background: #ffffff;
+  color: #333;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
 }
 
+/* Card style */
+.card {
+  background: #f4fbf2;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Inputs */
 input, select {
-  width: 90%;
-  padding: 8px;
-  margin: 5px;
-}
-
-button {
+  width: 95%;
   padding: 10px;
-  background: #2c5f2d;
-  color: white;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
   border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  transition: 0.3s;
+}
+
+/* Analyze button */
+.btn-analyze {
+  background: linear-gradient(45deg, #2e7d32, #66bb6a);
+  color: white;
+}
+
+.btn-analyze:hover {
+  transform: scale(1.05);
+  background: linear-gradient(45deg, #1b5e20, #4caf50);
+}
+
+/* Location button */
+.btn-location {
+  background: linear-gradient(45deg, #1565c0, #42a5f5);
+  color: white;
+}
+
+.btn-location:hover {
+  transform: scale(1.05);
+}
+
+/* Result box */
+.result-box {
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 16px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Color preview */
+.color-box {
+  height: 25px;
+  margin-top: 5px;
   border-radius: 5px;
 }
 
-.color-box {
-  width: 100%;
-  height: 30px;
+/* Map */
+#map {
+  height: 220px;
   margin-top: 10px;
-  border-radius: 5px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.link-box {
+  text-align: center;
+  margin-top: 10px;
 }
 </style>
 
@@ -49,75 +114,164 @@ button {
 
 <body>
 
-<h1>🌾 Smart Crop Disease Predictor</h1>
+<h2>🌾 Smart Crop AI Assistant</h2>
 
 <div class="container">
 
-Moisture (%):<br>
-<input type="number" id="moisture"><br>
-
-Pest Alert:<br>
-<select id="pest">
-  <option value="0">No</option>
-  <option value="1">Yes</option>
-</select><br>
-
-Leaf Spot Level (1-6):<br>
-<input type="number" id="leaf"><br>
-
-<h3>Select Leaf Colour</h3>
-
-<select id="colorSelect" onchange="showColor()">
-  <option value="1">🟡 Baby Yellow (Healthy)</option>
-  <option value="2">🟨 Light Yellow</option>
-  <option value="3">🟠 Yellow</option>
-  <option value="4">🟧 Orange</option>
-  <option value="5">🟫 Brown (Severe)</option>
+<div class="card">
+<label>🌱 Crop</label>
+<select id="crop" onchange="setMoistureRange()">
+<option value="rice">Rice</option>
+<option value="wheat">Wheat</option>
+<option value="cotton">Cotton</option>
+<option value="sugarcane">Sugarcane</option>
+<option value="soybean">Soybean</option>
 </select>
+</div>
 
+<div class="card">
+<label>💧 Moisture (%)</label>
+<input type="number" id="moisture">
+<small id="moistureHint"></small>
+</div>
+
+<div class="card">
+<label>🐛 Pest</label>
+<select id="pest">
+<option value="0">No</option>
+<option value="1">Yes</option>
+</select>
+</div>
+
+<div class="card">
+<label>🍃 Leaf Damage (1–6)</label>
+<input type="number" id="leaf">
+<small>1 = Healthy | 6 = Severe Damage</small>
+</div>
+
+<div class="card">
+<label>🎨 Leaf Color</label>
+<select id="color" onchange="showColor()">
+<option value="1">Green (Healthy)</option>
+<option value="2">Light Yellow</option>
+<option value="3">Yellow</option>
+<option value="4">Orange</option>
+<option value="5">Brown (Severe)</option>
+</select>
 <div id="colorBox" class="color-box"></div>
+</div>
 
-<br>
-<button onclick="predict()">Predict Disease</button>
+<button class="btn-analyze" onclick="predict()">🔍 Analyze Crop</button>
 
-<h2 id="result"></h2>
+<div id="result" class="result-box"></div>
+
+<button class="btn-location" onclick="getLocation()">📍 Find Nearby krushiSeva Kendra</button>
+
+<div id="map"></div>
+
+<div id="kendraList" class="link-box"></div>
 
 </div>
 
 <script>
 
-function showColor() {
-  let val = document.getElementById("colorSelect").value;
-  let color;
+// Moisture ranges
+const ranges = {
+  rice:[60,80],
+  wheat:[40,60],
+  cotton:[50,70],
+  sugarcane:[70,90],
+  soybean:[45,65]
+};
 
-  if (val == 1) color = "#ffffcc";
-  else if (val == 2) color = "#ffeb99";
-  else if (val == 3) color = "#ffd11a";
-  else if (val == 4) color = "#ff9900";
-  else color = "#8b4513";
-
-  document.getElementById("colorBox").style.background = color;
+function setMoistureRange(){
+  let crop = document.getElementById("crop").value;
+  let r = ranges[crop];
+  document.getElementById("moistureHint").innerText =
+    "Ideal Range: "+r[0]+" - "+r[1]+"%";
 }
 
-function predict() {
-  let m = document.getElementById("moisture").value;
-  let p = document.getElementById("pest").value;
-  let l = document.getElementById("leaf").value;
-  let c = document.getElementById("colorSelect").value;
+// Color preview
+function showColor(){
+  let colors=["#4caf50","#ffeb3b","#ffc107","#ff9800","#795548"];
+  let val=document.getElementById("color").value;
+  document.getElementById("colorBox").style.background=colors[val-1];
+}
 
-  let score = (m/20) + (l*2) + (c*5) + (p*10);
+// Prediction
+function predict(){
 
-  if (score > 30) {
-    document.getElementById("result").innerHTML = "⚠ High Disease Risk";
-  } 
-  else if (score > 15) {
-    document.getElementById("result").innerHTML = "⚡ Moderate Risk";
-  } 
-  else {
-    document.getElementById("result").innerHTML = "✅ Low Disease Risk";
+  let moisture = document.getElementById("moisture").value;
+  let leaf = document.getElementById("leaf").value;
+
+  // 🚫 Frontend validation
+  if(moisture === "" || leaf === ""){
+    document.getElementById("result").innerHTML = "⚠ Please fill all fields";
+    return;
   }
+
+  if(moisture < 0 || moisture > 100){
+    document.getElementById("result").innerHTML = "❌ Moisture must be 0–100";
+    return;
+  }
+
+  if(leaf < 1 || leaf > 6){
+    document.getElementById("result").innerHTML = "❌ Leaf damage must be 1–6";
+    return;
+  }
+
+  let data={
+    moisture:moisture,
+    pest:document.getElementById("pest").value,
+    leaf:leaf,
+    color:document.getElementById("color").value
+  };
+
+  fetch("http://127.0.0.1:5000/predict",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)
+  })
+  .then(res=>res.json())
+  .then(res=>{
+
+    // 🚫 Backend error
+    if(res.error){
+      document.getElementById("result").style.background="#ff5252";
+      document.getElementById("result").innerHTML = "❌ " + res.error;
+      return;
+    }
+
+    let color="lightgreen";
+    if(res.risk.includes("High")) color="#ff5252";
+    else if(res.risk.includes("Moderate")) color="#ffca28";
+
+    document.getElementById("result").style.background=color;
+
+    document.getElementById("result").innerHTML =
+      `${res.risk}<br>🌿 ${res.disease}<br>💡 ${res.advice}`;
+  })
+  .catch(()=>{
+    document.getElementById("result").innerHTML="⚠ Backend not running";
+  });
+}
+// Map
+function getLocation(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    let lat=pos.coords.latitude;
+    let lon=pos.coords.longitude;
+
+    document.getElementById("map").innerHTML =
+      `<iframe width="100%" height="100%" src="https://maps.google.com/maps?q=${lat},${lon}&z=13&output=embed"></iframe>`;
+
+    let url=`https://www.google.com/maps/search/krushi+seva+kendra/@${lat},${lon},13z`;
+
+    document.getElementById("kendraList").innerHTML =
+      `<a href="${url}" target="_blank">🌱 View Nearby Centers</a>`;
+  });
 }
 
+setMoistureRange();
 showColor();
 
 </script>
